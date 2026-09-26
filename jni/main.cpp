@@ -21,8 +21,9 @@ extern "C" JNIEXPORT void JNICALL
 Java_com_example_modmenu_MainActivity_ApplyPatch(JNIEnv *env, jobject thiz, jlong address, jboolean enable) {
     uintptr_t targetAddr = (uintptr_t)address;
     if (enable) {
-        char patchBytes[] = { 0x00, 0x00, 0xA0, 0xE3, 0x1E, 0xFF, 0x2F, 0xE1 };
+        // signed/unsigned hatasını önlemek için unsigned char kullanıyoruz
+        unsigned char patchBytes[] = { 0x00, 0x00, 0xA0, 0xE3, 0x1E, 0xFF, 0x2F, 0xE1 };
         PatchMemory(targetAddr, patchBytes, sizeof(patchBytes));
-        LOGD("Yama uygulandı: %lx", targetAddr);
+        LOGD("Yama uygulandi adres: %p", (void*)targetAddr);
     }
 }
