@@ -2,6 +2,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 #include <android/log.h>
+#include <cstring>
 
 #define TAG "ModCore"
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, TAG, __VA_ARGS__)
@@ -12,7 +13,7 @@ void PatchMemory(uintptr_t addr, const void* bytes, size_t size) {
     uintptr_t pageStart = (addr & ~(pageSize - 1));
     
     mprotect((void*)pageStart, pageSize, PROT_READ | PROT_WRITE | PROT_EXEC);
-    memcpy((void*)addr, bytes, size);
+    std::memcpy((void*)addr, bytes, size);
     mprotect((void*)pageStart, pageSize, PROT_READ | PROT_EXEC);
 }
 
