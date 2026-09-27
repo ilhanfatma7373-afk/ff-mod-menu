@@ -1,0 +1,2 @@
+rootProject.name = "ff-mod-menu"
+include ':app'
