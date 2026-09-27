@@ -37,10 +37,9 @@ jobs:
         mkdir -p app/src/main/jniLibs
         cp -r libs/* app/src/main/jniLibs/
 
-    - name: Build APK with Gradle
+    - name: Build APK with Gradle Wrapper (v8.2)
       run: |
-        # Basit bir gradle wrapper yoksa oluşturalım veya doğrudan derleyelim
-        gradle wrapper
+        gradle wrapper --gradle-version 8.2
         ./gradlew assembleDebug
 
     - name: Upload APK Artifact
