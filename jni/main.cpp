@@ -1,29 +1,43 @@
 #include <jni.h>
-#include <sys/mman.h>
 #include <unistd.h>
-#include <android/log.h>
-#include <cstring>
+#include <sys/socket.h>
 
-#define TAG "ModCore"
-#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, TAG, __VA_ARGS__)
+bool fakeLagActive = false;
+bool aimbotActive = false;
+bool espActive = false;
+bool noRecoilActive = false;
 
-void PatchMemory(uintptr_t addr, const void* bytes, size_t size) {
-    if (addr == 0) return;
-    uintptr_t pageSize = sysconf(_SC_PAGESIZE);
-    uintptr_t pageStart = (addr & ~(pageSize - 1));
-    
-    mprotect((void*)pageStart, pageSize, PROT_READ | PROT_WRITE | PROT_EXEC);
-    std::memcpy((void*)addr, bytes, size);
-    mprotect((void*)pageStart, pageSize, PROT_READ | PROT_EXEC);
+// Orijinal send fonksiyonu (Fake Lag için)
+typedef ssize_t (*send_t)(int sockfd, const void *buf, size_t len, int flags);
+send_t orig_send = nullptr;
+
+ssize_t hooked_send(int sockfd, const void *buf, size_t len, int flags) {
+    if (fakeLagActive) {
+        usleep(350000); // 350ms gecikme
+    }
+    return orig_send(sockfd, buf, len, flags);
 }
 
+// Java'dan gelen özellik ID'lerine göre ana kontrol merkezi
 extern "C" JNIEXPORT void JNICALL
-Java_com_example_modmenu_MainActivity_ApplyPatch(JNIEnv *env, jobject thiz, jlong address, jboolean enable) {
-    uintptr_t targetAddr = (uintptr_t)address;
-    if (enable) {
-        // signed/unsigned hatasını önlemek için unsigned char kullanıyoruz
-        unsigned char patchBytes[] = { 0x00, 0x00, 0xA0, 0xE3, 0x1E, 0xFF, 0x2F, 0xE1 };
-        PatchMemory(targetAddr, patchBytes, sizeof(patchBytes));
-        LOGD("Yama uygulandi adres: %p", (void*)targetAddr);
+Java_com_example_modmenu_MainActivity_ApplyPatch(JNIEnv *env, jobject thiz, jlong featureID, jboolean enable) {
+    switch (featureID) {
+        case 1: // Fake Lag
+            fakeLagActive = enable;
+            break;
+        case 2: // Aimbot
+            aimbotActive = enable;
+            // TODO: Aimbot bellek/fonksiyon tetikleyicileri buraya eklenecek
+            break;
+        case 3: // ESP (Wallhack)
+            espActive = enable;
+            // TODO: ESP çizim/bellek yama tetikleyicileri buraya eklenecek
+            break;
+        case 4: // No Recoil
+            noRecoilActive = enable;
+            // TODO: Silah tepme adresleri buraya eklenecek
+            break;
+        default:
+            break;
     }
 }
