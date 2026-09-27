@@ -1,4 +1,4 @@
-name: Build Mod Menu
+name: Build Mod Menu APK
 
 on:
   push:
@@ -13,25 +13,38 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v3
 
+    - name: Set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+
     - name: Install Android NDK Manually
       run: |
         echo "NDK indiriliyor..."
         wget -q https://dl.google.com/android/repository/android-ndk-r23b-linux.zip
-        echo "Arşiv açılıyor..."
         unzip -q android-ndk-r23b-linux.zip
-        echo "ANDROID_NDK_HOME ayarlanıyor..."
         echo "ANDROID_NDK_HOME=$PWD/android-ndk-r23b" >> $GITHUB_ENV
         echo "$PWD/android-ndk-r23b" >> $GITHUB_PATH
 
-    - name: Build Library
+    - name: Build Native Library (.so)
       run: |
         cd jni
         ndk-build
-        
-    - name: Upload Artifact
+
+    - name: Move .so to jniLibs
+      run: |
+        mkdir -p app/src/main/jniLibs
+        cp -r libs/* app/src/main/jniLibs/
+
+    - name: Build APK with Gradle
+      run: |
+        # Basit bir gradle wrapper yoksa oluşturalım veya doğrudan derleyelim
+        gradle wrapper
+        ./gradlew assembleDebug
+
+    - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ModMenu-Output
-        path: |
-          libs/
-          bin/
+        name: ModMenu-APK
+        path: app/build/outputs/apk/debug/app-debug.apk
