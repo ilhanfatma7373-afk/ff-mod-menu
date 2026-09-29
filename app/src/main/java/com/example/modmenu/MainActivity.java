@@ -2,7 +2,9 @@ package com.example.modmenu;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.PixelFormat;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -12,6 +14,8 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.Toast;
@@ -62,23 +66,23 @@ public class MainActivity extends Activity {
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY :
                 WindowManager.LayoutParams.TYPE_PHONE;
 
-        // 1. Ekranın köşesindeki hareketli simge
+        // 1. Yüzen Anonymous Simgesi (drawable klasörüne attığın anonymous_logo.png)
         iconParams = new WindowManager.LayoutParams(
-                120, 120, layoutType,
+                140, 140, layoutType,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                 PixelFormat.TRANSLUCENT);
         iconParams.gravity = Gravity.TOP | Gravity.START;
         iconParams.x = 50;
         iconParams.y = 200;
 
-        Button floatingIcon = new Button(this);
-        floatingIcon.setText("MOD");
-        floatingIcon.setBackgroundColor(0xFF00FF00); // Yeşil logo
-        floatingIcon.setTextColor(0xFF000000);
-        
+        ImageButton floatingIcon = new ImageButton(this);
+        floatingIcon.setImageResource(R.drawable.anonymous_logo);
+        floatingIcon.setBackgroundColor(Color.TRANSPARENT);
+        floatingIcon.setScaleType(ImageView.ScaleType.FIT_CENTER);
+
         floatingIcon.setOnClickListener(v -> toggleMenuPanel());
 
-        // Simgeyi sürükleyip taşıma özelliği
+        // Simgeyi ekranda parmakla sürükleyip taşıma özelliği
         floatingIcon.setOnTouchListener(new View.OnTouchListener() {
             private int initialX, initialY;
             private float initialTouchX, initialTouchY;
@@ -105,80 +109,86 @@ public class MainActivity extends Activity {
         windowManager.addView(floatingIcon, iconParams);
         floatingIconView = floatingIcon;
 
-        // 2. İkona tıklandığında açılacak Ana Menü Paneli
+        // 2. Ana Menü Paneli (Anonymous - Free Fire v1.0)
         menuParams = new WindowManager.LayoutParams(
-                650, 700, layoutType,
+                700, 750, layoutType,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                 PixelFormat.TRANSLUCENT);
         menuParams.gravity = Gravity.CENTER;
 
-        // Menü listesinin sığması için ScrollView ekliyoruz
         ScrollView scrollView = new ScrollView(this);
         LinearLayout menuLayout = new LinearLayout(this);
         menuLayout.setOrientation(LinearLayout.VERTICAL);
-        menuLayout.setBackgroundColor(0xF0101010); // Koyu şeffaf panel arka planı
+        
+        // Hacker tarzı koyu siyah arka plan ve neon yeşil çerçeve
+        GradientDrawable menuBg = new GradientDrawable();
+        menuBg.setColor(Color.parseColor("#DD0F0F0F"));
+        menuBg.setStroke(2, Color.parseColor("#00FF66"));
+        menuBg.setCornerRadius(15);
+        menuLayout.setBackground(menuBg);
         menuLayout.setPadding(25, 25, 25, 25);
 
-        // Başlık
+        // Menü Başlığı
         Button titleButton = new Button(this);
-        titleButton.setText("=== FREE FIRE PRO MOD ===");
+        titleButton.setText("anonymous - free fire v1.0");
+        titleButton.setTextColor(Color.parseColor("#00FF66"));
+        titleButton.setBackgroundColor(Color.TRANSPARENT);
+        titleButton.setTextSize(16);
         titleButton.setEnabled(false);
         menuLayout.addView(titleButton);
 
-        // --- ÖZELLİK BUTONLARI ---
-        
-        // 1. Fake Lag Butonu (ID: 1)
+        // Hile Özellikleri Butonları
         addFeatureButton(menuLayout, "Fake Lag: KAPALI", 1);
-
-        // 2. Aimbot Butonu (ID: 2)
         addFeatureButton(menuLayout, "Aimbot: KAPALI", 2);
-
-        // 3. ESP Wallhack Butonu (ID: 3)
         addFeatureButton(menuLayout, "ESP Wallhack: KAPALI", 3);
-
-        // 4. No Recoil Butonu (ID: 4)
         addFeatureButton(menuLayout, "No Recoil: KAPALI", 4);
 
         scrollView.addView(menuLayout);
         menuPanelView = scrollView;
-        menuPanelView.setVisibility(View.GONE); // Başlangıçta gizli
+        menuPanelView.setVisibility(View.GONE);
         windowManager.addView(menuPanelView, menuParams);
     }
 
-    // Butonları otomatik oluşturan yardımcı metot
     private void addFeatureButton(LinearLayout parentLayout, String title, long featureId) {
         Button btn = new Button(this);
         btn.setText(title);
-        btn.setBackgroundColor(0xFF444444); // Gri (Pasif)
-        btn.setTextColor(0xFFFFFFFF);
+        btn.setTextColor(Color.WHITE);
+
+        GradientDrawable btnBg = new GradientDrawable();
+        btnBg.setColor(Color.parseColor("#FF222222"));
+        btnBg.setCornerRadius(8);
+        btn.setBackground(btnBg);
 
         final boolean[] state = {false};
         btn.setOnClickListener(v -> {
             state[0] = !state[0];
-            ApplyPatch(featureId, state[0]); // C++ tarafına ID ve durumu gönder
+            ApplyPatch(featureId, state[0]);
+
+            GradientDrawable updatedBg = new GradientDrawable();
+            updatedBg.setCornerRadius(8);
 
             if (state[0]) {
                 btn.setText(title.replace("KAPALI", "AÇIK"));
-                btn.setBackgroundColor(0xFFFF0000); // Kırmızı (Aktif)
+                updatedBg.setColor(Color.parseColor("#CCFF0000"));
                 Toast.makeText(this, title.split(":")[0] + " Aktif!", Toast.LENGTH_SHORT).show();
             } else {
                 btn.setText(title.replace("AÇIK", "KAPALI"));
-                btn.setBackgroundColor(0xFF444444); // Gri (Pasif)
+                updatedBg.setColor(Color.parseColor("#FF222222"));
                 Toast.makeText(this, title.split(":")[0] + " Kapalı!", Toast.LENGTH_SHORT).show();
             }
+            btn.setBackground(updatedBg);
         });
 
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
-        params.setMargins(0, 10, 0, 10);
+        params.setMargins(0, 12, 0, 12);
         btn.setLayoutParams(params);
 
         parentLayout.addView(btn);
     }
 
-    // Menüyü açıp kapatma fonksiyonu
     private void toggleMenuPanel() {
         if (isMenuOpen) {
             menuPanelView.setVisibility(View.GONE);
