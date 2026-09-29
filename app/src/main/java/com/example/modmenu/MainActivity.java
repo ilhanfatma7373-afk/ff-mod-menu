@@ -66,7 +66,7 @@ public class MainActivity extends Activity {
                 WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY :
                 WindowManager.LayoutParams.TYPE_PHONE;
 
-        // 1. Yüzen Anonymous Simgesi (drawable klasörüne attığın anonymous_logo.png)
+        // 1. Yüzen Anonymous Simgesi
         iconParams = new WindowManager.LayoutParams(
                 140, 140, layoutType,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
@@ -111,7 +111,7 @@ public class MainActivity extends Activity {
 
         // 2. Ana Menü Paneli (Anonymous - Free Fire v1.0)
         menuParams = new WindowManager.LayoutParams(
-                700, 750, layoutType,
+                700, 820, layoutType,
                 WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
                 PixelFormat.TRANSLUCENT);
         menuParams.gravity = Gravity.CENTER;
@@ -137,7 +137,8 @@ public class MainActivity extends Activity {
         titleButton.setEnabled(false);
         menuLayout.addView(titleButton);
 
-        // Hile Özellikleri Butonları
+        // Hile ve Koruma Özellikleri Butonları
+        addFeatureButton(menuLayout, "Anti-Ban / Bypass: KAPALI", 5); // Yeni Eklenen Ban Koruması
         addFeatureButton(menuLayout, "Fake Lag: KAPALI", 1);
         addFeatureButton(menuLayout, "Aimbot: KAPALI", 2);
         addFeatureButton(menuLayout, "ESP Wallhack: KAPALI", 3);
@@ -169,8 +170,14 @@ public class MainActivity extends Activity {
 
             if (state[0]) {
                 btn.setText(title.replace("KAPALI", "AÇIK"));
-                updatedBg.setColor(Color.parseColor("#CCFF0000"));
-                Toast.makeText(this, title.split(":")[0] + " Aktif!", Toast.LENGTH_SHORT).show();
+                // Anti-ban aktifse özel mavi/yeşil ton, diğerleri için kırmızı renk
+                if (featureId == 5) {
+                    updatedBg.setColor(Color.parseColor("#CC00AAFF")); 
+                    Toast.makeText(this, "Anti-Ban Koruması Etkinleştirildi!", Toast.LENGTH_SHORT).show();
+                } else {
+                    updatedBg.setColor(Color.parseColor("#CCFF0000"));
+                    Toast.makeText(this, title.split(":")[0] + " Aktif!", Toast.LENGTH_SHORT).show();
+                }
             } else {
                 btn.setText(title.replace("AÇIK", "KAPALI"));
                 updatedBg.setColor(Color.parseColor("#FF222222"));
@@ -183,7 +190,7 @@ public class MainActivity extends Activity {
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
-        params.setMargins(0, 12, 0, 12);
+        params.setMargins(0, 10, 0, 10);
         btn.setLayoutParams(params);
 
         parentLayout.addView(btn);

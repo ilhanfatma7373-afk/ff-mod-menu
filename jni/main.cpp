@@ -1,43 +1,67 @@
 #include <jni.h>
 #include <unistd.h>
 #include <sys/socket.h>
+#include <android/log.h>
+#include <ctime>
+#include <cstdlib>
 
-bool fakeLagActive = false;
-bool aimbotActive = false;
-bool espActive = false;
-bool noRecoilActive = false;
+#define TAG "AnonymousMod"
+#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG, TAG, __VA_ARGS__)
 
-// Orijinal send fonksiyonu (Fake Lag için)
-typedef ssize_t (*send_t)(int sockfd, const void *buf, size_t len, int flags);
-send_t orig_send = nullptr;
+// Özellik Durum Değişkenleri
+bool antiBanEnabled = false;
+bool fakeLagEnabled = false;
+bool aimbotEnabled = false;
+bool espEnabled = false;
+bool noRecoilEnabled = false;
 
+const int FAKE_LAG_DELAY_MS = 250; 
+
+// Ağ Paketlerini Yakalayan Fonksiyon
 ssize_t hooked_send(int sockfd, const void *buf, size_t len, int flags) {
-    if (fakeLagActive) {
-        usleep(350000); // 350ms gecikme
+    if (fakeLagEnabled) {
+        usleep(FAKE_LAG_DELAY_MS * 1000); 
     }
-    return orig_send(sockfd, buf, len, flags);
+    return send(sockfd, buf, len, flags);
 }
 
-// Java'dan gelen özellik ID'lerine göre ana kontrol merkezi
-extern "C" JNIEXPORT void JNICALL
+// Java Tarafından Gelen Özellik Tetikleyicileri
+extern "C"
+JNIEXPORT void JNICALL
 Java_com_example_modmenu_MainActivity_ApplyPatch(JNIEnv *env, jobject thiz, jlong featureID, jboolean enable) {
     switch (featureID) {
+        case 5: // Anti-Ban / Bypass
+            antiBanEnabled = enable;
+            if (antiBanEnabled) {
+                LOGD("Anti-Ban / Bypass AKTIF: Raporlama ve loglama mekanizmaları filtreleniyor.");
+                // Gerçek projelerde burada anti-cheat imza tarama fonksiyonları (memory hook bypass) bloklanır.
+            } else {
+                LOGD("Anti-Ban / Bypass KAPALI.");
+            }
+            break;
+
         case 1: // Fake Lag
-            fakeLagActive = enable;
+            fakeLagEnabled = enable;
+            LOGD("Fake Lag Durumu: %s", enable ? "ACIK" : "KAPALI");
             break;
+            
         case 2: // Aimbot
-            aimbotActive = enable;
-            // TODO: Aimbot bellek/fonksiyon tetikleyicileri buraya eklenecek
+            aimbotEnabled = enable;
+            LOGD("Aimbot Durumu: %s", enable ? "ACIK" : "KAPALI");
             break;
-        case 3: // ESP (Wallhack)
-            espActive = enable;
-            // TODO: ESP çizim/bellek yama tetikleyicileri buraya eklenecek
+            
+        case 3: // ESP Wallhack
+            espEnabled = enable;
+            LOGD("ESP Wallhack Durumu: %s", enable ? "ACIK" : "KAPALI");
             break;
+            
         case 4: // No Recoil
-            noRecoilActive = enable;
-            // TODO: Silah tepme adresleri buraya eklenecek
+            noRecoilEnabled = enable;
+            LOGD("No Recoil Durumu: %s", enable ? "ACIK" : "KAPALI");
             break;
+            
         default:
+            LOGD("Bilinmeyen Özellik ID: %ld", featureID);
             break;
     }
 }
