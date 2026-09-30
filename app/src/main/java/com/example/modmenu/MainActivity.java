@@ -80,12 +80,11 @@ public class MainActivity extends Activity {
         floatingIcon.setBackgroundColor(Color.TRANSPARENT);
         floatingIcon.setScaleType(ImageView.ScaleType.FIT_CENTER);
 
-        floatingIcon.setOnClickListener(v -> toggleMenuPanel());
-
-        // Simgeyi ekranda parmakla sürükleyip taşıma özelliği
+        // Simgeyi hem sürükleme hem de sorunsuz tıklama (açılma) özelliği ile donatıyoruz
         floatingIcon.setOnTouchListener(new View.OnTouchListener() {
             private int initialX, initialY;
             private float initialTouchX, initialTouchY;
+            private static final int CLICK_THRESHOLD = 15;
 
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -96,10 +95,23 @@ public class MainActivity extends Activity {
                         initialTouchX = event.getRawX();
                         initialTouchY = event.getRawY();
                         return true;
+
                     case MotionEvent.ACTION_MOVE:
-                        iconParams.x = initialX + (int) (event.getRawX() - initialTouchX);
-                        iconParams.y = initialY + (int) (event.getRawY() - initialTouchY);
+                        int deltaX = (int) (event.getRawX() - initialTouchX);
+                        int deltaY = (int) (event.getRawY() - initialTouchY);
+                        iconParams.x = initialX + deltaX;
+                        iconParams.y = initialY + deltaY;
                         windowManager.updateViewLayout(floatingIcon, iconParams);
+                        return true;
+
+                    case MotionEvent.ACTION_UP:
+                        float movedX = Math.abs(event.getRawX() - initialTouchX);
+                        float movedY = Math.abs(event.getRawY() - initialTouchY);
+                        
+                        // Parmak hareket etmediyse tıklama kabul edip menüyü aç/kapat yapıyoruz
+                        if (movedX < CLICK_THRESHOLD && movedY < CLICK_THRESHOLD) {
+                            toggleMenuPanel();
+                        }
                         return true;
                 }
                 return false;
@@ -137,8 +149,8 @@ public class MainActivity extends Activity {
         titleButton.setEnabled(false);
         menuLayout.addView(titleButton);
 
-        // Hile ve Koruma Özellikleri Butonları
-        addFeatureButton(menuLayout, "Anti-Ban / Bypass: KAPALI", 5); // Yeni Eklenen Ban Koruması
+        // Hile ve Koruma Özellikleri Butonları (5 Özellik Tam)
+        addFeatureButton(menuLayout, "Anti-Ban / Bypass: KAPALI", 5);
         addFeatureButton(menuLayout, "Fake Lag: KAPALI", 1);
         addFeatureButton(menuLayout, "Aimbot: KAPALI", 2);
         addFeatureButton(menuLayout, "ESP Wallhack: KAPALI", 3);
@@ -170,7 +182,6 @@ public class MainActivity extends Activity {
 
             if (state[0]) {
                 btn.setText(title.replace("KAPALI", "AÇIK"));
-                // Anti-ban aktifse özel mavi/yeşil ton, diğerleri için kırmızı renk
                 if (featureId == 5) {
                     updatedBg.setColor(Color.parseColor("#CC00AAFF")); 
                     Toast.makeText(this, "Anti-Ban Koruması Etkinleştirildi!", Toast.LENGTH_SHORT).show();
